@@ -1,0 +1,6 @@
+feedparser
+youtube-transcript-api
+anthropic
+python-dotenv
+pyyaml
+certifi

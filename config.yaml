@@ -1,0 +1,36 @@
+# YouTube Daily Digest Configuration
+# ==================================
+
+# Output format: markdown, html, or both
+output_format: markdown
+
+# Claude model to use (can also set ANTHROPIC_MODEL env var)
+# Options: claude-sonnet-4-5-20250929, claude-3-5-sonnet-20241022, etc.
+model: claude-haiku-4-5
+
+# Number of videos to process per channel (default)
+# Options: 1-15 (RSS feed limit), or "all" for all 15
+videos_per_channel: 1
+
+# Channels to monitor
+# Run `python get_subscriptions.py` to auto-populate this list
+#
+# Per-channel override: add "videos: N" to fetch more from specific channels
+channels:
+  # Format:
+  # - id: CHANNEL_ID
+  #   name: Channel Name
+  #   videos: 5  # optional override
+  
+  # Example channels (replace with your own):
+  - id: UCsBjURrPoezykLs9EqgamOA
+    name: Fireship
+  
+  - id: UCVHFbqXqoYvEWM1Ddxl0QDg
+    name: Alex Ziskind
+
+  - id: UCXl4i9dYBrFOabk0xGmbkRA
+    name: Dwarkesh Patel
+    videos: 3  # Fetch last 3 videos from Dwarkesh
+
+  # Add more channels here...
