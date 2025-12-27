@@ -4,13 +4,14 @@ Automatically fetch, transcribe, and summarize your YouTube subscriptions into A
 
 ## Features
 
-- 📡 Fetches latest videos from your subscribed channels via RSS (no API key needed)
-- 📝 Extracts full transcripts using `youtube-transcript-api`
-- 🤖 Multi-pass AI summarization with Claude (handles long videos)
-- 📄 Outputs nicely formatted Markdown or HTML with embedded videos
+- 📡 Fetches latest videos via RSS (no YouTube API key needed)
+- 📝 Extracts full transcripts automatically
+- 🤖 Multi-pass AI summarization (handles long videos)
+- 📄 Outputs Markdown or HTML with embedded videos
 - ✅ Proper attribution to creators
-- 🎬 Single video mode - summarize any YouTube video on demand
-- ⚙️ Configurable videos per channel (global or per-channel override)
+- 🎬 Single video mode - summarize any video on demand
+- ⚙️ Configurable videos per channel
+- 🔌 **Provider agnostic** - works with Anthropic, OpenAI, Ollama, and 100+ LLMs
 
 ## Quick Start
 
@@ -20,41 +21,23 @@ Automatically fetch, transcribe, and summarize your YouTube subscriptions into A
 pip install -r requirements.txt
 ```
 
-Or manually:
-```bash
-pip install feedparser youtube-transcript-api anthropic python-dotenv pyyaml
-```
+### 2. Configure your LLM provider
 
-### 2. Set up your API key
-
+**For cloud providers (Anthropic, OpenAI, etc.):**
 ```bash
 cp env-example.txt .env
-# Edit .env and add your Anthropic API key
+# Edit .env and add your API key
 ```
+
+**For local models (Ollama, LM Studio):**
+No API key needed - just set `api_base` in `config.yaml`
 
 ### 3. Import your YouTube subscriptions
 
-**Option A: OPML Export (Easiest)**
-1. Go to https://www.youtube.com/subscription_manager
-2. Scroll to bottom, click "Export subscriptions"
-3. Run:
 ```bash
+# Go to https://www.youtube.com/subscription_manager
+# Click "Export subscriptions" at the bottom
 python get_subscriptions.py opml subscription_manager.xml
-```
-
-**Option B: Google Takeout**
-1. Go to https://takeout.google.com
-2. Deselect all → Select "YouTube" → Only "subscriptions"
-3. Export, download, and extract
-4. Run:
-```bash
-python get_subscriptions.py takeout path/to/subscriptions.json
-```
-
-**Option C: Browser Script**
-```bash
-python get_subscriptions.py browser
-# Follow the printed instructions
 ```
 
 ### 4. Run the digest
@@ -67,167 +50,113 @@ python youtube_digest.py
 
 ### Channel Digest Mode (default)
 
-Process latest videos from all configured channels:
-
 ```bash
 python youtube_digest.py
 ```
 
 ### Single Video Mode
 
-Summarize any YouTube video on demand:
-
 ```bash
-# Full URL
-python youtube_digest.py "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# Short URL
-python youtube_digest.py "https://youtu.be/dQw4w9WgXcQ"
-
-# Just the video ID
-python youtube_digest.py dQw4w9WgXcQ
-
-# With custom title and channel (optional)
-python youtube_digest.py dQw4w9WgXcQ "My Custom Title" "Channel Name"
+# Any of these work:
+python youtube_digest.py "https://www.youtube.com/watch?v=VIDEO_ID"
+python youtube_digest.py "https://youtu.be/VIDEO_ID"
+python youtube_digest.py VIDEO_ID
 ```
-
-The script auto-detects video title and channel name from YouTube.
 
 ## Configuration
 
-Edit `config.yaml`:
+All configuration lives in `config.yaml`. The `.env` file is only for API keys (secrets).
+
+### config.yaml
 
 ```yaml
 # Output format: markdown, html, or both
 output_format: markdown
 
-# Claude model to use
+# LLM model to use (see provider docs for model names)
 model: claude-sonnet-4-5-20250929
 
-# Default videos per channel (1-15, or "all" for 15)
+# For local models, set the API endpoint:
+# api_base: http://localhost:11434
+
+# Videos per channel (1-15 or "all")
 videos_per_channel: 1
 
-# Channels to process
+# Your subscribed channels
 channels:
   - id: UCsBjURrPoezykLs9EqgamOA
     name: Fireship
-  
-  - id: UCVHFbqXqoYvEWM1Ddxl0QDg
-    name: Alex Ziskind
-
   - id: UCXl4i9dYBrFOabk0xGmbkRA
     name: Dwarkesh Patel
-    videos: 3  # Override: fetch last 3 videos from this channel
+    videos: 3  # Override for this channel
 ```
 
-### Configuration Options
-
-| Option | Values | Description |
-|--------|--------|-------------|
-| `output_format` | `markdown`, `html`, `both` | Output file format |
-| `model` | Claude model string | AI model to use for summarization |
-| `videos_per_channel` | `1`-`15` or `all` | Default videos to fetch per channel |
-| `channels[].videos` | `1`-`15` or `all` | Per-channel override |
-
-### Available Models
-
-| Model | Description |
-|-------|-------------|
-| `claude-sonnet-4-5-20250929` | Latest Sonnet 4.5 (default) |
-| `claude-3-5-sonnet-20241022` | Claude 3.5 Sonnet (widely available) |
-| `claude-3-haiku-20240307` | Fastest, cheapest option |
-
-### Environment Variables
-
-Set in `.env` file:
+### .env (secrets only)
 
 ```bash
-# Required
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-
-# Optional overrides
-OUTPUT_FORMAT=both
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+ANTHROPIC_API_KEY=sk-ant-...
+# or
+OPENAI_API_KEY=sk-...
+# or other provider keys
 ```
 
-## Output Files
+## Supported LLM Providers
 
-**Channel digest mode:**
-- `digest_2024-12-27.md` - Markdown file with all summaries
-- `digest_2024-12-27.html` - Styled HTML with embedded videos
+This project uses [LiteLLM](https://docs.litellm.ai/docs/providers) for unified access to 100+ LLM providers.
 
-**Single video mode:**
-- `video_Video-Title_2024-12-27.md`
-- `video_Video-Title_2024-12-27.html`
+| Provider | Model Examples | Docs |
+|----------|---------------|------|
+| Anthropic | `claude-sonnet-4-5-20250929` | [docs.anthropic.com](https://docs.anthropic.com/en/docs/about-claude/models/all-models) |
+| OpenAI | `gpt-4o`, `gpt-4o-mini` | [platform.openai.com](https://platform.openai.com/docs/models) |
+| Ollama (local) | `ollama/llama3`, `ollama/mistral` | [ollama.com/library](https://ollama.com/library) |
+| OpenRouter | `openrouter/...` | [openrouter.ai/docs](https://openrouter.ai/docs) |
+| Others | See LiteLLM docs | [docs.litellm.ai](https://docs.litellm.ai/docs/providers) |
+
+### Using Local Models (Ollama)
+
+1. Install Ollama: https://ollama.com
+2. Pull a model: `ollama pull llama3`
+3. Configure `config.yaml`:
+```yaml
+model: ollama/llama3
+api_base: http://localhost:11434
+```
+4. No API key needed in `.env`
 
 ## How It Works
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  RSS Feed   │────▶│ Transcript  │────▶│   Claude    │
-│  (free)     │     │ API (free)  │     │   (paid)    │
-└─────────────┘     └─────────────┘     └─────────────┘
-                                               │
-                    ┌──────────────────────────┘
-                    ▼
-        ┌─────────────────────┐
-        │  Multi-pass Summary │
-        │  1. Chunk transcript│
-        │  2. Analyze chunks  │
-        │  3. Synthesize blog │
-        └─────────────────────┘
-                    │
-                    ▼
-        ┌─────────────────────┐
-        │   Output Files      │
-        │  • Markdown         │
-        │  • HTML + embeds    │
-        │  • Attribution      │
-        └─────────────────────┘
+RSS Feed → Transcript API → LLM (chunk + summarize) → Markdown/HTML
+   │            │                    │
+   └── free ────┴── free ────────────┴── your provider
 ```
 
-## Cost Estimate
+1. **RSS Feed** - Get latest videos (free, no auth)
+2. **Transcript API** - Extract captions (free, unofficial)
+3. **LLM** - Multi-pass summarization (your chosen provider)
+4. **Output** - Blog posts with attribution and embeds
 
-Using Claude Sonnet (default):
+## Cost Considerations
 
-| Video Length | Estimated Cost |
-|--------------|----------------|
-| Short (< 10 min) | ~$0.01 |
-| Medium (10-30 min) | ~$0.02 |
-| Long (30-60 min) | ~$0.03-0.05 |
-| Very long (1-3 hours) | ~$0.10-0.15 |
+Costs depend on your LLM provider. For a typical 30-minute video:
+- ~15,000 tokens input (transcript)
+- ~2,000 tokens output (summary)
+- Multiply by number of chunks for longer videos
 
-Daily digest of 10 channels: ~$0.10-0.30
+**Free options:** Use Ollama with local models (requires decent GPU/CPU)
 
-**Tip:** Use `claude-3-haiku-20240307` for cheaper processing (~10x less), though summaries may be less detailed.
+## Scheduling
 
-## Scheduling (Optional)
-
-### Windows Task Scheduler
-
-```
-Action: Start a program
-Program: python
-Arguments: C:\path\to\youtube_digest.py
-Start in: C:\path\to\
-```
-
-### Mac/Linux Cron
-
+### Cron (Mac/Linux)
 ```bash
-# Edit crontab
-crontab -e
-
-# Add line to run daily at 8 AM
-0 8 * * * cd /path/to/digest && /usr/bin/python3 youtube_digest.py >> digest.log 2>&1
+0 8 * * * cd /path/to/digest && python youtube_digest.py >> digest.log 2>&1
 ```
 
-### PowerShell Scheduled Task
-
-```powershell
-$action = New-ScheduledTaskAction -Execute "python" -Argument "youtube_digest.py" -WorkingDirectory "C:\path\to"
-$trigger = New-ScheduledTaskTrigger -Daily -At 8am
-Register-ScheduledTask -TaskName "YouTubeDigest" -Action $action -Trigger $trigger
+### Task Scheduler (Windows)
+```
+Program: python
+Arguments: youtube_digest.py
+Start in: C:\path\to\digest
 ```
 
 ## File Structure
@@ -235,50 +164,41 @@ Register-ScheduledTask -TaskName "YouTubeDigest" -Action $action -Trigger $trigg
 ```
 youtube-digest/
 ├── youtube_digest.py      # Main script
-├── get_subscriptions.py   # Import YouTube subscriptions
-├── config.yaml            # Channel list + settings
-├── .env                   # API key (create from env-example.txt)
-├── env-example.txt        # Template for .env
-├── requirements.txt       # Python dependencies
-├── README.md              # This file
-└── LICENSE                # MIT License
+├── get_subscriptions.py   # Import subscriptions
+├── config.yaml            # All configuration
+├── .env                   # API keys only (secrets)
+├── requirements.txt       # Dependencies
+├── README.md             
+└── LICENSE               
 ```
 
 ## Limitations
 
-- Only works for videos with captions (auto-generated or uploaded)
-- RSS feeds only show last 15 videos per channel
-- Transcript API is unofficial (could break, but has been stable for years)
-- Video info fetching may not work for age-restricted or private videos
+- Only works for videos with captions
+- RSS feeds show last 15 videos per channel
+- Transcript API is unofficial (stable but could break)
 
 ## Troubleshooting
 
 **"Could not get transcript"**
 - Video may not have captions enabled
-- Try a different video from the same channel
 
-**"No videos found"**
-- Check channel ID is correct
-- Verify the RSS feed works: `https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID`
+**Model errors**
+- Check your API key in `.env`
+- Verify model name matches your provider's docs
+- For local models, ensure the server is running
 
-**Rate limiting**
-- Add delays between videos if processing many at once
-- The transcript API has informal rate limits
+**SSL certificate errors**
+- Install: `pip install --upgrade certifi`
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
-
-## Attribution
-
-When using the generated summaries publicly, the script automatically includes proper attribution to the original creators. This is both ethical and helps drive traffic to their channels.
+MIT License - see [LICENSE](LICENSE)
 
 ## Contributing
 
-Feel free to submit issues and pull requests. Ideas for improvements:
-
+Ideas for improvement:
 - [ ] Track processed videos to avoid re-summarizing
-- [ ] Email/Slack delivery of daily digest
-- [ ] Support for playlists
-- [ ] Parallel processing for faster digests
-- [ ] Custom summary templates
+- [ ] Email/Slack delivery
+- [ ] Playlist support
+- [ ] Parallel processing

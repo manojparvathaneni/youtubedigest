@@ -2,19 +2,19 @@
 """
 YouTube Daily Digest
 Fetches latest videos from subscribed channels, extracts transcripts,
-and generates AI summaries using Claude.
+and generates AI summaries using any LLM provider (Anthropic, OpenAI, Ollama, etc.)
 """
 
 import feedparser
 from youtube_transcript_api import YouTubeTranscriptApi
-import anthropic
+import litellm
 from datetime import datetime
 from dotenv import load_dotenv
 import os
 import yaml
 from pathlib import Path
 
-# Load environment variables from .env file
+# Load environment variables from .env file (API keys only)
 load_dotenv()
 
 # ============================================================
@@ -31,6 +31,9 @@ def load_config() -> dict:
         print("   Or run: python get_subscriptions.py")
         default_config = {
             "output_format": "markdown",
+            "output_dir": "blog",
+            "model": "claude-sonnet-4-5-20250929",
+            "videos_per_channel": 1,
             "channels": [
                 {"id": "UCsBjURrPoezykLs9EqgamOA", "name": "Fireship"}
             ]
@@ -44,10 +47,20 @@ def load_config() -> dict:
 
 # Load config
 config = load_config()
-OUTPUT_FORMAT = os.getenv("OUTPUT_FORMAT", config.get("output_format", "markdown"))
 
-# Claude model to use
-MODEL = os.getenv("ANTHROPIC_MODEL", config.get("model", "claude-sonnet-4-5"))
+# All configuration comes from config.yaml
+# (.env is only for API keys/secrets)
+OUTPUT_FORMAT = config.get("output_format", "markdown")
+OUTPUT_DIR = config.get("output_dir", "blog")
+MODEL = config.get("model", "claude-sonnet-4-5-20250929")
+API_BASE = config.get("api_base", None)  # For custom endpoints (Ollama, LM Studio, etc.)
+
+# Configure litellm if custom base URL is set
+if API_BASE:
+    litellm.api_base = API_BASE
+    # Also set for providers that need it explicitly
+    os.environ["OPENAI_API_BASE"] = API_BASE
+    os.environ["OLLAMA_API_BASE"] = API_BASE
 
 # Number of videos per channel: 1-15 or "all"
 _vpc = config.get("videos_per_channel", 1)
@@ -180,12 +193,12 @@ def chunk_transcript(transcript: str, chunk_size: int = 10000) -> list[str]:
     
     return chunks
 
-def summarize_chunk(client: anthropic.Anthropic, title: str, chunk: str, chunk_num: int, total_chunks: int) -> str:
+def summarize_chunk(title: str, chunk: str, chunk_num: int, total_chunks: int) -> str:
     """Extract key points from a single chunk."""
-    message = client.messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        messages=[
+    kwargs = {
+        "model": MODEL,
+        "max_tokens": 1024,
+        "messages": [
             {
                 "role": "user",
                 "content": f"""You're analyzing part {chunk_num} of {total_chunks} from a YouTube video transcript.
@@ -204,20 +217,24 @@ Extract from this segment:
 Be thorough - capture everything valuable. We'll synthesize later."""
             }
         ]
-    )
-    return message.content[0].text
+    }
+    if API_BASE:
+        kwargs["api_base"] = API_BASE
+    
+    response = litellm.completion(**kwargs)
+    return response.choices[0].message.content
 
-def synthesize_blog_post(client: anthropic.Anthropic, title: str, channel_name: str, chunk_summaries: list[str], video_link: str, video_id: str) -> str:
+def synthesize_blog_post(title: str, channel_name: str, chunk_summaries: list[str], video_link: str, video_id: str) -> str:
     """Combine chunk summaries into a cohesive blog-style post."""
     combined_notes = "\n\n---\n\n".join([f"**Section {i+1}:**\n{summary}" for i, summary in enumerate(chunk_summaries)])
     
     # YouTube embed code
     embed_code = f'<iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allowfullscreen></iframe>'
     
-    message = client.messages.create(
-        model=MODEL,
-        max_tokens=2048,
-        messages=[
+    kwargs = {
+        "model": MODEL,
+        "max_tokens": 2048,
+        "messages": [
             {
                 "role": "user",
                 "content": f"""Based on these extracted notes from a YouTube video, write an engaging blog-style post.
@@ -256,13 +273,15 @@ Write in an engaging, conversational tone. Use markdown formatting for readabili
 Make it comprehensive enough that someone could get 80% of the value without watching, while encouraging them to watch the full video for the complete experience."""
             }
         ]
-    )
-    return message.content[0].text
-
-def summarize_with_claude(title: str, channel_name: str, transcript: str, video_link: str, video_id: str) -> str:
-    """Generate blog-style summary using multi-pass approach."""
-    client = anthropic.Anthropic()
+    }
+    if API_BASE:
+        kwargs["api_base"] = API_BASE
     
+    response = litellm.completion(**kwargs)
+    return response.choices[0].message.content
+
+def summarize_transcript(title: str, channel_name: str, transcript: str, video_link: str, video_id: str) -> str:
+    """Generate blog-style summary using multi-pass approach."""
     # Split into chunks
     chunks = chunk_transcript(transcript)
     print(f"  📄 Split into {len(chunks)} chunks")
@@ -271,12 +290,12 @@ def summarize_with_claude(title: str, channel_name: str, transcript: str, video_
     chunk_summaries = []
     for i, chunk in enumerate(chunks):
         print(f"  🔍 Analyzing chunk {i+1}/{len(chunks)}...")
-        summary = summarize_chunk(client, title, chunk, i+1, len(chunks))
+        summary = summarize_chunk(title, chunk, i+1, len(chunks))
         chunk_summaries.append(summary)
     
     # Synthesize into blog post
     print("  ✍️  Synthesizing blog post...")
-    blog_post = synthesize_blog_post(client, title, channel_name, chunk_summaries, video_link, video_id)
+    blog_post = synthesize_blog_post(title, channel_name, chunk_summaries, video_link, video_id)
     
     return blog_post
 
@@ -284,6 +303,7 @@ def main():
     print(f"\n📺 YouTube Daily Digest - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
     print("=" * 60)
     print(f"📋 Loaded {len(CHANNELS)} channels from {CONFIG_FILE}")
+    print(f"🤖 Using model: {MODEL}")
     
     if not CHANNELS:
         print("\n⚠️  No channels configured!")
@@ -318,7 +338,7 @@ def main():
             
             # Summarize
             print("     🤖 Generating blog post...")
-            summary = summarize_with_claude(
+            summary = summarize_transcript(
                 video['title'], 
                 channel_name, 
                 transcript, 
@@ -339,20 +359,23 @@ def main():
     # Generate markdown output
     date_str = datetime.now().strftime('%Y-%m-%d')
     
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
     if OUTPUT_FORMAT in ("markdown", "both"):
         markdown_content = f"# YouTube Daily Digest - {date_str}\n\n"
         for item in summaries:
             markdown_content += f"---\n\n"
             markdown_content += f"{item['summary']}\n\n"
         
-        md_file = f"digest_{date_str}.md"
+        md_file = os.path.join(OUTPUT_DIR, f"digest_{date_str}.md")
         with open(md_file, 'w', encoding='utf-8') as f:
             f.write(markdown_content)
         print(f"\n📄 Markdown saved: {md_file}")
     
     if OUTPUT_FORMAT in ("html", "both"):
         html_content = generate_html_digest(summaries, date_str)
-        html_file = f"digest_{date_str}.html"
+        html_file = os.path.join(OUTPUT_DIR, f"digest_{date_str}.html")
         with open(html_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
         print(f"🌐 HTML saved: {html_file}")
@@ -535,7 +558,7 @@ if __name__ == "__main__":
         print(f"✅ Got transcript ({len(transcript)} chars)")
         print("🤖 Generating blog post...")
         
-        summary = summarize_with_claude(
+        summary = summarize_transcript(
             video_title,
             channel_name,
             transcript,
@@ -547,8 +570,11 @@ if __name__ == "__main__":
         date_str = datetime.now().strftime('%Y-%m-%d')
         safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in video_title)[:50]
         
+        # Ensure output directory exists
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        
         if OUTPUT_FORMAT in ("markdown", "both"):
-            md_file = f"video_{safe_title}_{date_str}.md"
+            md_file = os.path.join(OUTPUT_DIR, f"video_{safe_title}_{date_str}.md")
             with open(md_file, 'w', encoding='utf-8') as f:
                 f.write(f"# {video_title}\n\n{summary}")
             print(f"\n📄 Markdown saved: {md_file}")
@@ -558,7 +584,7 @@ if __name__ == "__main__":
                 [{"summary": summary, "title": video_title, "channel": channel_name}],
                 date_str
             )
-            html_file = f"video_{safe_title}_{date_str}.html"
+            html_file = os.path.join(OUTPUT_DIR, f"video_{safe_title}_{date_str}.html")
             with open(html_file, 'w', encoding='utf-8') as f:
                 f.write(html_content)
             print(f"🌐 HTML saved: {html_file}")

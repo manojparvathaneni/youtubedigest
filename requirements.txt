@@ -1,6 +1,10 @@
 feedparser
 youtube-transcript-api
-anthropic
+litellm
 python-dotenv
 pyyaml
 certifi
+
+# LiteLLM provides unified interface for multiple LLM providers:
+# - Anthropic (claude-*), OpenAI (gpt-*), Ollama (ollama/*), and 100+ more
+# See: https://docs.litellm.ai/docs/providers

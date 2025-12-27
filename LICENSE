@@ -19,3 +19,28 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+ADDITIONAL NOTICES
+
+AI-Generated Code Disclaimer:
+This software was developed with the assistance of AI tools ("vibe coding"). 
+While efforts have been made to ensure functionality, the code is provided 
+without any guarantee of correctness, security, or suitability for any 
+particular purpose. Users should review and test the code before deploying 
+in any production environment.
+
+Third-Party Services:
+This software interacts with third-party services including YouTube and 
+Anthropic's Claude API. Users are solely responsible for complying with 
+the terms of service of these platforms:
+- YouTube Terms of Service: https://www.youtube.com/t/terms
+- Anthropic Acceptable Use Policy: https://www.anthropic.com/legal/aup
+
+The authors of this software are not responsible for any violations of 
+third-party terms of service resulting from the use of this software.
+
+No Affiliation:
+This project is not affiliated with, endorsed by, or sponsored by YouTube, 
+Google, Anthropic, or any other company mentioned herein.

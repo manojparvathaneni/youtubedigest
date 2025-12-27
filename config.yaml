@@ -4,8 +4,22 @@
 # Output format: markdown, html, or both
 output_format: markdown
 
-# Claude model to use (can also set ANTHROPIC_MODEL env var)
-# Options: claude-sonnet-4-5-20250929, claude-3-5-sonnet-20241022, etc.
+# Output directory for generated files (created if doesn't exist)
+output_dir: blog
+
+# ============================================================
+# LLM Configuration
+# ============================================================
+# Uses LiteLLM for unified access to multiple providers.
+# See: https://docs.litellm.ai/docs/providers
+#
+# Examples:
+#   Anthropic:  claude-sonnet-4-5-20250929, claude-3-5-sonnet-20241022
+#   OpenAI:     gpt-4o, gpt-4o-mini, gpt-3.5-turbo
+#   Ollama:     ollama/llama3, ollama/mistral, ollama/phi3
+#   OpenRouter: openrouter/anthropic/claude-3-opus
+#
+# For Ollama/local models, also set api_base below.
 model: claude-haiku-4-5
 
 # Number of videos to process per channel (default)
