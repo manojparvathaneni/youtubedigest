@@ -73,6 +73,9 @@ All configuration lives in `config.yaml`. The `.env` file is only for API keys (
 # Output format: markdown, html, or both
 output_format: markdown
 
+# Output directory for generated files (created automatically)
+output_dir: blog
+
 # LLM model to use (see provider docs for model names)
 model: claude-sonnet-4-5-20250929
 
@@ -91,6 +94,17 @@ channels:
     videos: 3  # Override for this channel
 ```
 
+### Configuration Options
+
+| Option | Values | Default | Description |
+|--------|--------|---------|-------------|
+| `output_format` | `markdown`, `html`, `both` | `markdown` | Output file format |
+| `output_dir` | directory path | `blog` | Where to save generated files |
+| `model` | LLM model string | `claude-sonnet-4-5-20250929` | AI model for summarization |
+| `api_base` | URL | (none) | Custom API endpoint for local models |
+| `videos_per_channel` | `1`-`15` or `all` | `1` | Videos to fetch per channel |
+| `channels[].videos` | `1`-`15` or `all` | (global default) | Per-channel override |
+
 ### .env (secrets only)
 
 ```bash
@@ -98,6 +112,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 # or
 OPENAI_API_KEY=sk-...
 # or other provider keys
+
+# Optional overrides (usually set in config.yaml instead)
+# OUTPUT_DIR=blog
+# OUTPUT_FORMAT=both
 ```
 
 ## Supported LLM Providers
@@ -136,6 +154,24 @@ RSS Feed → Transcript API → LLM (chunk + summarize) → Markdown/HTML
 3. **LLM** - Multi-pass summarization (your chosen provider)
 4. **Output** - Blog posts with attribution and embeds
 
+## Output Files
+
+Files are saved to the `output_dir` directory (default: `blog/`):
+
+**Channel digest mode:**
+```
+blog/digest_2024-12-27.md
+blog/digest_2024-12-27.html
+```
+
+**Single video mode:**
+```
+blog/video_Video-Title_2024-12-27.md
+blog/video_Video-Title_2024-12-27.html
+```
+
+The directory is created automatically if it doesn't exist.
+
 ## Cost Considerations
 
 Costs depend on your LLM provider. For a typical 30-minute video:
@@ -169,7 +205,10 @@ youtube-digest/
 ├── .env                   # API keys only (secrets)
 ├── requirements.txt       # Dependencies
 ├── README.md             
-└── LICENSE               
+├── LICENSE               
+└── blog/                  # Output directory (auto-created)
+    ├── digest_2024-12-27.md
+    └── digest_2024-12-27.html
 ```
 
 ## Limitations
@@ -194,6 +233,32 @@ youtube-digest/
 ## License
 
 MIT License - see [LICENSE](LICENSE)
+
+## Disclaimer
+
+**This software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. Use at your own risk.**
+
+### Important Notices
+
+- **AI-Generated Code.** This project was built using AI-assisted development ("vibe coding") with Claude. While functional, it may contain bugs, inefficiencies, or unexpected behavior. Review the code before use in production environments.
+
+- **Not Affiliated.** This is an independent project and is not endorsed, sponsored, or affiliated with YouTube, Google, or Anthropic.
+
+- **Respect Copyright.** Generated summaries are intended for personal use. If publishing summaries publicly, ensure proper attribution to original creators and consider fair use guidelines in your jurisdiction. This tool is designed to complement, not replace, watching original content.
+
+- **API Terms of Service.** Users are responsible for complying with:
+  - [YouTube Terms of Service](https://www.youtube.com/t/terms)
+  - [Anthropic Acceptable Use Policy](https://www.anthropic.com/legal/aup)
+
+- **Unofficial APIs.** This tool uses the unofficial `youtube-transcript-api` library which may break without notice if YouTube changes their systems.
+
+- **No Guarantee of Accuracy.** AI-generated summaries may contain errors, omissions, or misinterpretations. Always refer to the original video for authoritative information.
+
+- **Rate Limits.** Excessive use may result in temporary blocks from YouTube or API rate limiting. Use responsibly.
+
+## Attribution
+
+When using generated summaries publicly, the script automatically includes proper attribution to original creators. This is both ethical and helps drive traffic to their channels.
 
 ## Contributing
 
