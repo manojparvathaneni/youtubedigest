@@ -1462,7 +1462,7 @@ Examples:
 
     # For backward compatibility: positional argument for single video mode
     parser.add_argument(
-        "video",
+        "single_video",
         nargs="?",
         help="YouTube video URL or ID (for single video mode)"
     )
@@ -1596,9 +1596,9 @@ if __name__ == "__main__":
             print("\n❌ Tutorial generation failed")
             sys.exit(1)
 
-    elif args.video:
+    elif args.single_video:
         # Single video mode (backward compatible)
-        run_single_video_mode(args.video)
+        run_single_video_mode(args.single_video)
 
     else:
         # Normal channel digest mode
