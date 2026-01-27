@@ -2,7 +2,7 @@
 # ==================================
 
 # Output format: markdown, html, or both
-output_format: markdown
+output_format: both
 
 # Output directory for generated files (created if doesn't exist)
 output_dir: blog
@@ -26,6 +26,16 @@ model: claude-haiku-4-5
 # Default: 8192 (good for 2-3 hour videos)
 # Reduce for models with smaller context windows
 max_tokens: 8192
+
+# ============================================================
+# Tutorial Mode Configuration
+# ============================================================
+# Max tokens for tutorial synthesis (Pass 3)
+# Default: 16384 (comprehensive tutorials need more tokens)
+tutorial_max_tokens: 16384
+
+# Directory to clone repositories into
+tutorial_clone_path: ./tutorial_repos/
 
 # Number of videos to process per channel (default)
 # Options: 1-15 (RSS feed limit), or "all" for all 15
