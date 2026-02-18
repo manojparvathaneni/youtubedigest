@@ -22,6 +22,7 @@ output_dir: blog
 # For Ollama/local models, also set api_base below.
 model: claude-haiku-4-5
 
+<<<<<<< HEAD
 # Max tokens for blog post generation (increase for longer videos)
 # Default: 8192 (good for 2-3 hour videos)
 # Reduce for models with smaller context windows
@@ -37,6 +38,8 @@ tutorial_max_tokens: 16384
 # Directory to clone repositories into
 tutorial_clone_path: ./tutorial_repos/
 
+=======
+>>>>>>> parent of 673689e (fixed the blog truncation issue- added configurable max token variable)
 # Number of videos to process per channel (default)
 # Options: 1-15 (RSS feed limit), or "all" for all 15
 videos_per_channel: 1

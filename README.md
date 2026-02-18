@@ -79,9 +79,6 @@ output_dir: blog
 # LLM model to use (see provider docs for model names)
 model: claude-sonnet-4-5-20250929
 
-# Max tokens for blog generation (increase for 2+ hour videos)
-max_tokens: 8192
-
 # For local models, set the API endpoint:
 # api_base: http://localhost:11434
 
@@ -104,7 +101,6 @@ channels:
 | `output_format` | `markdown`, `html`, `both` | `markdown` | Output file format |
 | `output_dir` | directory path | `blog` | Where to save generated files |
 | `model` | LLM model string | `claude-sonnet-4-5-20250929` | AI model for summarization |
-| `max_tokens` | integer | `8192` | Max tokens for blog generation (increase for long videos) |
 | `api_base` | URL | (none) | Custom API endpoint for local models |
 | `videos_per_channel` | `1`-`15` or `all` | `1` | Videos to fetch per channel |
 | `channels[].videos` | `1`-`15` or `all` | (global default) | Per-channel override |

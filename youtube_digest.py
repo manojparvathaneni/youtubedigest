@@ -33,7 +33,6 @@ def load_config() -> dict:
             "output_format": "markdown",
             "output_dir": "blog",
             "model": "claude-sonnet-4-5-20250929",
-            "max_tokens": 8192,
             "videos_per_channel": 1,
             "channels": [
                 {"id": "UCsBjURrPoezykLs9EqgamOA", "name": "Fireship"}
@@ -55,7 +54,6 @@ OUTPUT_FORMAT = config.get("output_format", "markdown")
 OUTPUT_DIR = config.get("output_dir", "blog")
 MODEL = config.get("model", "claude-sonnet-4-5-20250929")
 API_BASE = config.get("api_base", None)  # For custom endpoints (Ollama, LM Studio, etc.)
-MAX_TOKENS = config.get("max_tokens", 8192)  # Max tokens for blog post generation
 
 # Configure litellm if custom base URL is set
 if API_BASE:
@@ -378,7 +376,7 @@ def synthesize_blog_post(title: str, channel_name: str, chunk_summaries: list[st
     
     kwargs = {
         "model": MODEL,
-        "max_tokens": MAX_TOKENS,
+        "max_tokens": 2048,
         "messages": [
             {
                 "role": "user",
