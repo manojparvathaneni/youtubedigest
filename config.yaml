@@ -22,7 +22,6 @@ output_dir: blog
 # For Ollama/local models, also set api_base below.
 model: claude-haiku-4-5
 
-<<<<<<< HEAD
 # Max tokens for blog post generation (increase for longer videos)
 # Default: 8192 (good for 2-3 hour videos)
 # Reduce for models with smaller context windows
